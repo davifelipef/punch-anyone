@@ -3,6 +3,7 @@ export interface Punch {
   y: number;
   power: number;
   createdAt: number;
+  impactCreated: boolean;
 }
 
 export interface GameState {

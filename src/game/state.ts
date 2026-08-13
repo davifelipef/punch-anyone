@@ -1,4 +1,4 @@
-import type { GameState, Punch } from "../types";
+import type { GameState } from "../types";
 
 export const state: GameState = {
   damage: 0,
@@ -10,12 +10,11 @@ export function addPunch(
   y: number,
   power: number
 ) {
-  const punch: Punch = {
+  state.punches.push({
     x,
     y,
     power,
     createdAt: Date.now(),
-  };
-
-  state.punches.push(punch);
+    impactCreated: false,
+  });
 }

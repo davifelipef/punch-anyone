@@ -2,6 +2,12 @@ export class Renderer {
   private canvas: HTMLCanvasElement;
   private context: CanvasRenderingContext2D;
 
+  // ==========================================================
+  // SCREEN SHAKE
+  // ==========================================================
+
+  private shakeAmount = 0;
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
 
@@ -14,20 +20,68 @@ export class Renderer {
     this.context = context;
   }
 
+  // ==========================================================
+  // LIMPA O CANVAS
+  // ==========================================================
+
   clear() {
+    this.context.setTransform(1, 0, 0, 1, 0, 0);
+
     this.context.clearRect(
       0,
       0,
       this.canvas.width,
       this.canvas.height
     );
+
+    // Aplica um novo deslocamento aleatório
+    // para o próximo frame.
+    if (this.shakeAmount > 0) {
+      const offsetX =
+        (Math.random() - 0.5) *
+        this.shakeAmount;
+
+      const offsetY =
+        (Math.random() - 0.5) *
+        this.shakeAmount;
+
+      this.context.translate(
+        offsetX,
+        offsetY
+      );
+
+      // Reduz o shake progressivamente.
+      this.shakeAmount *= 0.75;
+
+      if (this.shakeAmount < 0.1) {
+        this.shakeAmount = 0;
+      }
+    }
   }
 
-  drawImage(image: HTMLImageElement) {
-    this.clear();
+  // ==========================================================
+  // ATIVA O SCREEN SHAKE
+  // ==========================================================
 
-    const canvasRatio = this.canvas.width / this.canvas.height;
-    const imageRatio = image.naturalWidth / image.naturalHeight;
+  shake(amount: number) {
+    this.shakeAmount = Math.max(
+      this.shakeAmount,
+      amount
+    );
+  }
+
+  // ==========================================================
+  // DESENHA A FOTO
+  // ==========================================================
+
+  drawImage(image: HTMLImageElement) {
+    const canvasRatio =
+      this.canvas.width /
+      this.canvas.height;
+
+    const imageRatio =
+      image.naturalWidth /
+      image.naturalHeight;
 
     let width = this.canvas.width;
     let height = this.canvas.height;
@@ -41,14 +95,18 @@ export class Renderer {
       height = this.canvas.height;
       width = height * imageRatio;
 
-      x = (this.canvas.width - width) / 2;
+      x =
+        (this.canvas.width - width) /
+        2;
     } else {
       // Imagem mais alta que o canvas:
       // mantém largura e corta topo/base
       width = this.canvas.width;
       height = width / imageRatio;
 
-      y = (this.canvas.height - height) / 2;
+      y =
+        (this.canvas.height - height) /
+        2;
     }
 
     this.context.drawImage(
@@ -59,6 +117,10 @@ export class Renderer {
       height
     );
   }
+
+  // ==========================================================
+  // DESENHA O PONTO DO SOCO
+  // ==========================================================
 
   drawPunch(x: number, y: number) {
     this.context.beginPath();
@@ -71,11 +133,17 @@ export class Renderer {
       Math.PI * 2
     );
 
-    this.context.fillStyle = "rgba(255, 0, 0, 0.5)";
+    this.context.fillStyle =
+      "rgba(255, 0, 0, 0.5)";
+
     this.context.fill();
 
     this.context.closePath();
   }
+
+  // ==========================================================
+  // DESENHA O PUNHO
+  // ==========================================================
 
   drawPunchImage(
     image: HTMLImageElement,
@@ -86,11 +154,17 @@ export class Renderer {
   ) {
     this.context.save();
 
-    const width = image.naturalWidth * scale;
-    const height = image.naturalHeight * scale;
+    const width =
+      image.naturalWidth * scale;
 
-    const anchorX = 212 * scale;
-    const anchorY = 171 * scale;
+    const height =
+      image.naturalHeight * scale;
+
+    const anchorX =
+      212 * scale;
+
+    const anchorY =
+      171 * scale;
 
     this.context.translate(x, y);
 
@@ -109,11 +183,22 @@ export class Renderer {
     this.context.restore();
   }
 
-  drawImpact(x: number, y: number, progress: number) {
+  // ==========================================================
+  // EFEITO DE IMPACTO
+  // ==========================================================
+
+  drawImpact(
+    x: number,
+    y: number,
+    progress: number
+  ) {
     this.context.save();
 
-    const radius = 10 + progress * 50;
-    const opacity = 1 - progress;
+    const radius =
+      10 + progress * 50;
+
+    const opacity =
+      1 - progress;
 
     this.context.beginPath();
 
@@ -125,7 +210,9 @@ export class Renderer {
       Math.PI * 2
     );
 
-    this.context.strokeStyle = `rgba(255, 255, 0, ${opacity})`;
+    this.context.strokeStyle =
+      `rgba(255, 255, 0, ${opacity})`;
+
     this.context.lineWidth = 8;
 
     this.context.stroke();
