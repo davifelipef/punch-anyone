@@ -12,8 +12,11 @@ export function createGameUI(
   // TÍTULO
   // ==========================================================
 
-  const title = document.createElement("h1");
-  title.textContent = "Punch Anyone";
+  const title =
+    document.createElement("h1");
+
+  title.textContent =
+    "Punch Anyone";
 
   // ==========================================================
   // CONTAINER DO CANVAS
@@ -32,14 +35,10 @@ export function createGameUI(
   const canvas =
     document.createElement("canvas");
 
-  const size = Math.min(
-    window.innerWidth * 0.9,
-    window.innerHeight * 0.7,
-    600
-  );
-
-  canvas.width = size;
-  canvas.height = size;
+  // Resolução lógica do jogo.
+  // O tamanho visual é controlado pelo CSS.
+  canvas.width = 600;
+  canvas.height = 600;
 
   // ==========================================================
   // UPLOAD DA FOTO
