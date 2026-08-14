@@ -1,6 +1,7 @@
 import "./style.css";
 import { Renderer } from "./canvas/renderer";
 import { addPunch, state } from "./game/state";
+import { isHit } from "./game/hit-detection";
 import {
   initializeFaceDetector,
   detectFace,
@@ -84,56 +85,6 @@ startGameLoop({
 });
 
 // ============================================================
-// VERIFICA SE O CLIQUE ATINGIU O ROSTO
-// ============================================================
-
-function isHit(
-  x: number,
-  y: number
-): boolean {
-  if (!currentImage || !detectedFace) {
-    return false;
-  }
-
-  const face = detectedFace;
-
-  // ----------------------------------------------------------
-  // Converte o canto superior esquerdo do rosto
-  // da imagem original para o Canvas.
-  // ----------------------------------------------------------
-
-  const topLeft =
-    renderer.getImageCoordinates(
-      currentImage,
-      face.x,
-      face.y
-    );
-
-  // ----------------------------------------------------------
-  // Converte também o canto inferior direito.
-  // ----------------------------------------------------------
-
-  const bottomRight =
-    renderer.getImageCoordinates(
-      currentImage,
-      face.x + face.width,
-      face.y + face.height
-    );
-
-  // ----------------------------------------------------------
-  // Verifica se o clique está dentro da bounding box
-  // da face já convertida para as coordenadas do Canvas.
-  // ----------------------------------------------------------
-
-  return (
-    x >= topLeft.x &&
-    x <= bottomRight.x &&
-    y >= topLeft.y &&
-    y <= bottomRight.y
-  );
-}
-
-// ============================================================
 // UPLOAD DA FOTO
 // ============================================================
 
@@ -212,7 +163,13 @@ canvas.addEventListener("click", (event) => {
     (event.clientY - rect.top) *
     (canvas.height / rect.height);
 
-  const hit = isHit(x, y);
+  const hit = isHit(
+    renderer,
+    currentImage,
+    detectedFace,
+    x,
+    y
+  );
 
   // Registra o soco no estado do jogo.
   addPunch(x, y, 10, hit);
