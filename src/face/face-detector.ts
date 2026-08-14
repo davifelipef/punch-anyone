@@ -24,7 +24,7 @@ export async function initializeFaceDetector() {
       {
         baseOptions: {
           modelAssetPath:
-            "/models/blaze_face_short_range.tflite",
+            `${import.meta.env.BASE_URL}models/blaze_face_short_range.tflite`,
         },
 
         runningMode: "IMAGE",

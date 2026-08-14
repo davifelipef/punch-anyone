@@ -23,7 +23,7 @@ export class AssetController {
     };
 
     this.punchImage.src =
-      "/assets/punches/right-punch.png";
+      `${import.meta.env.BASE_URL}assets/punches/right-punch.png`;
   }
 
   getPunchImage(): HTMLImageElement {
