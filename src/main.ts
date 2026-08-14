@@ -7,6 +7,7 @@ import {
   type DetectedFace,
 } from "./face/face-detector";
 import { startGameLoop } from "./game/game-loop";
+import { createGameUI } from "./ui/game-ui";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 
@@ -14,57 +15,14 @@ if (!app) {
   throw new Error("Elemento #app não encontrado");
 }
 
-// ============================================================
-// INTERFACE
-// ============================================================
+const ui = createGameUI(app);
 
-const title = document.createElement("h1");
-title.textContent = "Punch Anyone";
-
-const canvasContainer = document.createElement("div");
-canvasContainer.className = "canvas-container";
-
-const canvas = document.createElement("canvas");
-
-const size = Math.min(
-  window.innerWidth * 0.9,
-  window.innerHeight * 0.7,
-  600
-);
-
-canvas.width = size;
-canvas.height = size;
-
-// ------------------------------------------------------------
-// Upload da foto
-// ------------------------------------------------------------
-
-const uploadLabel = document.createElement("label");
-uploadLabel.className = "upload-button";
-uploadLabel.textContent = "📷 Escolher foto";
-
-const fileInput = document.createElement("input");
-fileInput.type = "file";
-fileInput.accept = "image/*";
-
-uploadLabel.appendChild(fileInput);
-
-// ------------------------------------------------------------
-// Botão para limpar a foto
-// ------------------------------------------------------------
-
-const clearButton = document.createElement("button");
-clearButton.className = "clear-button";
-clearButton.textContent = "🗑 Limpar foto";
-clearButton.classList.add("hidden");
-
-canvasContainer.append(canvas, uploadLabel);
-
-app.append(
-  title,
-  canvasContainer,
-  clearButton
-);
+const {
+  canvas,
+  uploadLabel,
+  fileInput,
+  clearButton,
+} = ui;
 
 // ============================================================
 // RENDERER
