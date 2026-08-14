@@ -1,20 +1,17 @@
 import "./style.css";
 
 import { Renderer } from "./canvas/renderer";
-import {
-  initializeFaceDetector,
-  type DetectedFace,
-} from "./face/face-detector";
+import { FaceController } from "./controllers/face-controller";
 import { startGameLoop } from "./game/game-loop";
 import { createGameUI } from "./ui/game-ui";
 import { setupGameEvents } from "./ui/game-events";
+import { AssetController } from "./controllers/asset-controller";
 
 // ============================================================
 // APLICAÇÃO
 // ============================================================
 
-const app =
-  document.querySelector<HTMLDivElement>("#app");
+const app = document.querySelector<HTMLDivElement>("#app");
 
 if (!app) {
   throw new Error(
@@ -32,59 +29,29 @@ const ui = createGameUI(app);
 // RENDERER
 // ============================================================
 
-const renderer =
-  new Renderer(ui.canvas);
+const renderer = new Renderer(ui.canvas);
 
 // ============================================================
 // FOTO DO JOGADOR
 // ============================================================
 
-let currentImage:
-  HTMLImageElement | null = null;
+let currentImage: HTMLImageElement | null = null;
 
 // ============================================================
 // DETECÇÃO FACIAL
 // ============================================================
 
-let detectedFace:
-  DetectedFace | null = null;
+const faceController = new FaceController();
 
-let faceDetectorReady = false;
-
-// ============================================================
-// INICIALIZAÇÃO DO DETECTOR FACIAL
-// ============================================================
-
-initializeFaceDetector()
-  .then(() => {
-    faceDetectorReady = true;
-
-    console.log(
-      "Detector facial pronto."
-    );
-  })
-  .catch((error) => {
-    console.error(
-      "Erro ao inicializar detector facial:",
-      error
-    );
-  });
+faceController.initialize();
 
 // ============================================================
 // ASSET DO PUNHO
 // ============================================================
 
-const punchImage =
-  new Image();
+const assetController = new AssetController();
 
-let punchImageLoaded = false;
-
-punchImage.onload = () => {
-  punchImageLoaded = true;
-};
-
-punchImage.src =
-  "/assets/punches/right-punch.png";
+assetController.load();
 
 // ============================================================
 // GAME LOOP
@@ -93,11 +60,11 @@ punchImage.src =
 startGameLoop({
   renderer,
   canvas: ui.canvas,
-  getCurrentImage: () =>
-    currentImage,
-  punchImage,
+  getCurrentImage: () => currentImage,
+  punchImage:
+    assetController.getPunchImage(),
   isPunchImageLoaded: () =>
-    punchImageLoaded,
+    assetController.isPunchImageLoaded(),
 });
 
 // ============================================================
@@ -112,11 +79,5 @@ setupGameEvents({
   setCurrentImage: (image) => {
     currentImage = image;
   },
-  getDetectedFace: () =>
-    detectedFace,
-  setDetectedFace: (face) => {
-    detectedFace = face;
-  },
-  isFaceDetectorReady: () =>
-    faceDetectorReady,
+  faceController,
 });

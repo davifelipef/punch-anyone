@@ -1,12 +1,8 @@
 import { addPunch, state } from "../game/state";
 import { isHit } from "../game/hit-detection";
-import {
-  detectFace,
-  type DetectedFace,
-} from "../face/face-detector";
 import { Renderer } from "../canvas/renderer";
 import type { GameUI } from "./game-ui";
-
+import { FaceController } from "../controllers/face-controller";
 
 interface GameEventsOptions {
   ui: GameUI;
@@ -15,11 +11,7 @@ interface GameEventsOptions {
   setCurrentImage: (
     image: HTMLImageElement | null
   ) => void;
-  getDetectedFace: () => DetectedFace | null;
-  setDetectedFace: (
-    face: DetectedFace | null
-  ) => void;
-  isFaceDetectorReady: () => boolean;
+  faceController: FaceController;
 }
 
 export function setupGameEvents({
@@ -27,9 +19,7 @@ export function setupGameEvents({
   renderer,
   getCurrentImage,
   setCurrentImage,
-  getDetectedFace,
-  setDetectedFace,
-  isFaceDetectorReady,
+  faceController,
 }: GameEventsOptions) {
   const {
     canvas,
@@ -58,27 +48,21 @@ export function setupGameEvents({
         setCurrentImage(image);
 
         // ------------------------------------------------------
-        // DETECTA O ROSTO NA IMAGEM ORIGINAL
+        // DETECTA O ROSTO
         // ------------------------------------------------------
 
-        if (isFaceDetectorReady()) {
-          const detectedFace =
-            detectFace(image);
+        const detectedFace =
+          faceController.detect(image);
 
-          setDetectedFace(
+        if (detectedFace) {
+          console.log(
+            "Rosto detectado:",
             detectedFace
           );
-
-          if (detectedFace) {
-            console.log(
-              "Rosto detectado:",
-              detectedFace
-            );
-          } else {
-            console.log(
-              "Nenhum rosto detectado."
-            );
-          }
+        } else {
+          console.log(
+            "Nenhum rosto detectado."
+          );
         }
 
         renderer.drawImage(image);
@@ -105,7 +89,8 @@ export function setupGameEvents({
     "click",
     () => {
       setCurrentImage(null);
-      setDetectedFace(null);
+
+      faceController.clear();
 
       renderer.clear();
 
@@ -138,9 +123,6 @@ export function setupGameEvents({
       const rect =
         canvas.getBoundingClientRect();
 
-      // Converte as coordenadas do clique
-      // da tela para as coordenadas internas
-      // do Canvas.
       const x =
         (event.clientX - rect.left) *
         (canvas.width / rect.width);
@@ -152,12 +134,11 @@ export function setupGameEvents({
       const hit = isHit(
         renderer,
         getCurrentImage(),
-        getDetectedFace(),
+        faceController.getDetectedFace(),
         x,
         y
       );
 
-      // Registra o soco no estado do jogo.
       addPunch(
         x,
         y,
