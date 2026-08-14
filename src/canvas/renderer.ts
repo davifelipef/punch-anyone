@@ -119,6 +119,61 @@ export class Renderer {
   }
 
   // ==========================================================
+  // OBTÉM AS COORDENADAS DA IMAGEM
+  // ==========================================================
+
+  getImageCoordinates(
+    image: HTMLImageElement,
+    imageX: number,
+    imageY: number
+  ) {
+    const canvasRatio =
+      this.canvas.width /
+      this.canvas.height;
+
+    const imageRatio =
+      image.naturalWidth /
+      image.naturalHeight;
+
+    let scale: number;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (imageRatio > canvasRatio) {
+      // Imagem mais larga que o canvas.
+      // A altura ocupa todo o canvas e as laterais são cortadas.
+
+      scale =
+        this.canvas.height /
+        image.naturalHeight;
+
+      const width =
+        image.naturalWidth * scale;
+
+      offsetX =
+        (this.canvas.width - width) / 2;
+    } else {
+      // Imagem mais alta que o canvas.
+      // A largura ocupa todo o canvas e topo/base são cortados.
+
+      scale =
+        this.canvas.width /
+        image.naturalWidth;
+
+      const height =
+        image.naturalHeight * scale;
+
+      offsetY =
+        (this.canvas.height - height) / 2;
+    }
+
+    return {
+      x: imageX * scale + offsetX,
+      y: imageY * scale + offsetY,
+    };
+  }
+
+  // ==========================================================
   // DESENHA O PONTO DO SOCO
   // ==========================================================
 

@@ -4,6 +4,7 @@ export interface Punch {
   power: number;
   createdAt: number;
   impactCreated: boolean;
+  hit: boolean;
 }
 
 export interface GameState {

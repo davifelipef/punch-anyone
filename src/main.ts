@@ -2,6 +2,11 @@ import "./style.css";
 import { Renderer } from "./canvas/renderer";
 import { addPunch, state } from "./game/state";
 import { addImpact, impacts } from "./game/effects";
+import {
+  initializeFaceDetector,
+  detectFace,
+  type DetectedFace,
+} from "./face/face-detector";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 
@@ -72,6 +77,31 @@ const renderer = new Renderer(canvas);
 // ============================================================
 
 let currentImage: HTMLImageElement | null = null;
+
+// ============================================================
+// DETECÇÃO FACIAL
+// ============================================================
+
+let detectedFace: DetectedFace | null = null;
+
+let faceDetectorReady = false;
+
+// ============================================================
+// INICIALIZAÇÃO DO DETECTOR FACIAL
+// ============================================================
+
+initializeFaceDetector()
+  .then(() => {
+    faceDetectorReady = true;
+
+    console.log("Detector facial pronto.");
+  })
+  .catch((error) => {
+    console.error(
+      "Erro ao inicializar detector facial:",
+      error
+    );
+  });
 
 // ============================================================
 // ASSET DO PUNHO
@@ -191,14 +221,20 @@ function gameLoop() {
         elapsed >= approachEnd &&
         !punch.impactCreated
       ) {
-        addImpact(
-          punch.x,
-          punch.y
-        );
+        // O impacto visual e o shake só acontecem
+        // quando o soco realmente acertou o rosto.
+        if (punch.hit) {
+          addImpact(
+            punch.x,
+            punch.y
+          );
 
-        // Intensidade do cachoalhar do impacto
-        renderer.shake(10);
+          // Intensidade do chacoalhar do impacto.
+          renderer.shake(10);
+        }
 
+        // Marca que o momento do contato já aconteceu,
+        // seja HIT ou MISS.
         punch.impactCreated = true;
       }
 
@@ -332,6 +368,56 @@ function gameLoop() {
 gameLoop();
 
 // ============================================================
+// VERIFICA SE O CLIQUE ATINGIU O ROSTO
+// ============================================================
+
+function isHit(
+  x: number,
+  y: number
+): boolean {
+  if (!currentImage || !detectedFace) {
+    return false;
+  }
+
+  const face = detectedFace;
+
+  // ----------------------------------------------------------
+  // Converte o canto superior esquerdo do rosto
+  // da imagem original para o Canvas.
+  // ----------------------------------------------------------
+
+  const topLeft =
+    renderer.getImageCoordinates(
+      currentImage,
+      face.x,
+      face.y
+    );
+
+  // ----------------------------------------------------------
+  // Converte também o canto inferior direito.
+  // ----------------------------------------------------------
+
+  const bottomRight =
+    renderer.getImageCoordinates(
+      currentImage,
+      face.x + face.width,
+      face.y + face.height
+    );
+
+  // ----------------------------------------------------------
+  // Verifica se o clique está dentro da bounding box
+  // da face já convertida para as coordenadas do Canvas.
+  // ----------------------------------------------------------
+
+  return (
+    x >= topLeft.x &&
+    x <= bottomRight.x &&
+    y >= topLeft.y &&
+    y <= bottomRight.y
+  );
+}
+
+// ============================================================
 // UPLOAD DA FOTO
 // ============================================================
 
@@ -346,6 +432,20 @@ fileInput.addEventListener("change", () => {
 
   image.onload = () => {
     currentImage = image;
+
+    // ----------------------------------------------------------
+    // Detecta o rosto na imagem original
+    // ----------------------------------------------------------
+
+    if (faceDetectorReady) {
+      detectedFace = detectFace(image);
+
+      if (detectedFace) {
+        console.log("Rosto detectado:", detectedFace);
+      } else {
+        console.log("Nenhum rosto detectado.");
+      }
+    }
 
     renderer.drawImage(image);
 
@@ -376,22 +476,36 @@ clearButton.addEventListener("click", () => {
 // ============================================================
 
 canvas.addEventListener("click", (event) => {
+
+  // Só permite um soco por vez.
+  // Enquanto o punho estiver em animação, novos cliques são ignorados.
+  if (state.punches.length > 0) {
+    return;
+  }
+  
   const rect =
     canvas.getBoundingClientRect();
 
+  // Converte as coordenadas do clique
+  // da tela para as coordenadas internas do Canvas.
   const x =
-    event.clientX -
-    rect.left;
+    (event.clientX - rect.left) *
+    (canvas.width / rect.width);
 
   const y =
-    event.clientY -
-    rect.top;
+    (event.clientY - rect.top) *
+    (canvas.height / rect.height);
+
+  const hit = isHit(x, y);
 
   // Registra o soco no estado do jogo.
-  addPunch(x, y, 10);
+  addPunch(x, y, 10, hit);
 
-  console.log("Soco:", {
-    x,
-    y,
-  });
+  console.log(
+    hit ? "HIT 👊" : "MISS 💨",
+    {
+      x,
+      y,
+    }
+  );
 });
